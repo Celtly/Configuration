@@ -14,19 +14,26 @@ The following variables are used to tweak some of the configuration pieces. Thes
   
 #+end_src
 
-* Startup Performance
+* Startup 
+To configure the startup screen of Emacs, we use the package =dashboard= to custimaze our splash screen. We also use as a custom logo, the laughing man from Ghost in the Shell.
+
+*** Emacs dashboad
 
 #+begin_src emacs-lisp
+(defun my/dashboard-banner ()
+  """Set a dashboard banner including information on package initialization
+   time and garbage collections."""
+  (setq dashboard-banner-logo-title
+        (format "Emacs ready in %.2f seconds with %d garbage collections."
+                (float-time (time-subtract after-init-time before-init-time)) gcs-done)))
 
-  (defun efs/display-startup-time ()
-    (message " Emacs loaded in %s with %d garbage collections."
-             (format "%.2f seconds"
-                     (float-time
-                      (time-subtract after-init-time before-init-time)))
-             gcs-done))
-
-  (add-hook 'emacs-startup-hook #'efs/display-startup-time)
-
+(use-package dashboard
+  :init
+  (add-hook 'after-init-hook 'dashboard-refresh-buffer)
+  (add-hook 'dashboard-mode-hook 'my/dashboard-banner)
+  :config
+  (setq dashboard-startup-banner "~/Configuration/Emacs/qwe_download.png")
+  (dashboard-setup-startup-hook))
 #+end_src
 
 * Package System Setup
@@ -140,28 +147,6 @@ This section configures the basic UI settings that remove some of the elements t
     (beacon-mode 1))
 
 #+end_src
-** Startup page
-*** Get a nice looking image
-#+begin_src emacs-lisp
-(setq fancy-splash-image "~/.emacs.d/qwe_download.png")
-#+end_src
-
-
-# ** Font Configuration
-
-# This configuration uses the [[https://github.com/tonsky/FiraCode][Fira Code]] font by default and the [[https://fonts.google.com/specimen/Cantarell][Cantarell]] font for the variable pitch font that we will use in the org-mode files. 
-
-# #+begin_src emacs-lisp
-  
-#     (set-face-attribute 'default nil :font "Fira Code Retina" :height d13353/default-font-size)
-  
-#     ;; Set the fixed pitch face
-#     (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height d13353/default-font-size)
-  
-#     ;; Set the variable pitch face
-#     (set-face-attribute 'variable-pitch nil :font "Cantarell" :height d13353/default-variable-font-size :weight 'regular)
-  
-# #+end_src
 
 ** Icons
 
@@ -621,8 +606,6 @@ The basic config sections sets up a basic configuration for org-mode, org-agenda
 
     (config/org-font-setup))
 
-  (with-eval-after-load 'org
-      (require 'calfw-org))
 #+end_src
 
 ** Nicer Heading Bullets
@@ -701,7 +684,7 @@ This piece of code add a hook to =org-mode= buffers so that =config/org-babel-ta
   ;; Automatically tangle our Emacs.org config file when save it
   (defun config/org-babel-tangle-config ()
     (when (string-equal (file-name-directory (buffer-file-name))
-                        (expand-file-name "~/Configuration/"))
+                        (expand-file-name "~/Configuration/Emacs/"))
       ;; Dynamic scoping to the rescue
       (let ((org-confirm-babel-evaluate nil))
         (org-babel-tangle))))
